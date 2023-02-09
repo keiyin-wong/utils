@@ -157,7 +157,8 @@
                     // Render Table
                     $("#earning-table tbody").empty();
 
-                    var sellStockPrice = Math.round(stockPrice, 3);
+                    // * 1000 / 1000 (round to 3 decimal places)
+                    var sellStockPrice = Math.round(stockPrice * 1000) / 1000;
                     var tableRows = Number($("#table-rows").val());
                     for(var i = 0; i < tableRows; i++) {
                         $("#earning-table tbody").append(
