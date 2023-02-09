@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <title>Hello, world!</title>
+</head>
+
+
+<body>
+    <div class="container">
+        <div class="row" style="margin-bottom: 30px; margin-top: 15px;">
+            <div class="col-sm-12">
+                <h1>Calculate M+plus broker fees</h1>
+            </div>
+        </div>
+        <form id="mplus-input-form">
+            <div class="form-group row">
+                <label for="stock-price" class="col-sm-2 col-form-label">Stock price</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="stock-price" name="stockPrice" />
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="quantity" class="col-sm-2 col-form-label">Quantity</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="quantity" name="quantity" />
+                    <small id="passwordHelpInline" class="text-muted">
+                        * 100 units
+                    </small>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="table-rows" class="col-sm-2 col-form-label">Rows</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="table-rows" name="tableRows" value="100" />
+                    <small id="passwordHelpInline" class="text-muted">
+                        0 to 1000
+                    </small>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-sm-10">
+                    <button type="button" class="btn btn-primary" id="btn-calculate">Calculate</button>
+                    <button type="button" onClick="javascript:resetTable()" class="btn btn-primary" id="btn-reset">Reset</button>
+                </div>
+            </div>
+        </form>
+        <div>
+            <div class="row">
+                <div class="col-12">
+                    Total buying amount: <span id="total-buying-amount"></span>
+                </div>
+            </div>
+            <br>
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            Brokerage Fees:
+                        </div>
+                        <div class="col-6">
+                            <span id="broker-fees" class="float-right">-</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            Clearing Fees:
+                        </div>
+                        <div class="col-6">
+                            <span id="clearing-fees" class="float-right">-</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            Stamp Duty:
+                        </div>
+                        <div class="col-6">
+                            <span id="stamp-duty" class="float-right">-</span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6">
+                            Total Transaction Fees:
+                        </div>
+                        <div class="col-6">
+                            <span id="total-transaction-fees" class="float-right">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="table-responsive">
+                <table id="earning-table" class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col">Price</th>
+                            <th scope="col">Sell Amount</th>
+                            <th scope="col">Sell Amount Transactional Fees</th>
+                            <th scope="col">Sell Amount (minus transactional fees)</th>
+                            <th scope="col">Earnings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/additional-methods.min.js"></script>
+
+
+    <script type="text/javascript">
+        var sellStockPrice;
+        $(document).ready(function () {
+            $("#btn-calculate").click(function () {
+
+                // Get the stock price and quantity from the form
+                var stockPrice = Number($("#stock-price").val());
+                var quantity = Number($("#quantity").val()) * 100;
+
+                var totalAmount = getTotalAmount();
+                var totalTransactionFees = calculateTotalTransactionFees(totalAmount);
+
+                if ($("#mplus-input-form").valid()) {
+                    // Render the output to the page
+                    $("#broker-fees").text("RM " + calculateBrokerFees(totalAmount).toFixed(2));
+                    $("#clearing-fees").text("RM " + calculateClearingFee(totalAmount).toFixed(2));
+                    $("#stamp-duty").text("RM " + calculateStampDuty(totalAmount).toFixed(2));
+                    $("#total-transaction-fees").text("RM " + totalTransactionFees.toFixed(2));
+
+                    let totalBuyingAmount = totalAmount + totalTransactionFees;
+
+                    $("#total-buying-amount").text(`RM${totalAmount} + RM${totalTransactionFees} = RM${totalBuyingAmount.toFixed(2)}`);
+
+
+                    // Render Table
+                    $("#earning-table tbody").empty();
+
+                    var sellStockPrice = Math.round(stockPrice, 3);
+                    var tableRows = Number($("#table-rows").val());
+                    for(var i = 0; i < tableRows; i++) {
+                        $("#earning-table tbody").append(
+                            generateEarningTableCell(sellStockPrice.toFixed(3))
+                        );
+                        sellStockPrice += 0.005;
+                    }
+
+                    // Add load more button
+                    $("<button>").prop("type", "button")
+                        .prop("id", "load-more").text("Load more")
+                        .addClass("btn btn-sm btn-primary")
+                        .insertAfter($("#earning-table"))
+                        .on("click", function() {
+                            for(var i = 0; i < 20; i++) {
+                                $("#earning-table tbody").append(
+                                    generateEarningTableCell(sellStockPrice.toFixed(3))
+                                );
+                                sellStockPrice += 0.005;
+                            }
+                        });
+                }
+            });
+
+            $("#mplus-input-form").validate({
+                errorClass: "invalid-feedback",
+                highlight: function (element) {
+                    
+                },
+                unhighlight: function (element) {
+                   
+                },
+                rules: {
+                    stockPrice: {
+                        required: true,
+                        step: 0.005,
+                        // currency: ["RM", false]
+                    },
+                    quantity: {
+                        required: true,
+                        digits: true
+                    },
+                    tableRows: {
+                        min: 0,
+                        max: 1000,
+                        digits: true,
+                        required: true,
+                    }
+                }
+            })
+        });
+
+        function calculateBrokerFees(totalAmount) {
+            // 0.08% brokerage fees
+            var totalBrokerFees = totalAmount * 0.0008;
+            if (totalBrokerFees < 8) {
+                return 8
+            } else {
+                // * 100 convert to sens
+                // ceil the decimal
+                // convert to riggit again
+                return Math.ceil(totalBrokerFees * 100.0) / 100.0;
+            }
+        }
+
+        function calculateClearingFee(totalAmount) {
+            totalClearingfees = totalAmount * 0.0003;
+
+            // Max 200 riggit
+            if (totalClearingfees > 200) {
+                return 200;
+            } else {
+                return Math.ceil(totalClearingfees * 100.0) / 100.0;
+            }
+        }
+
+        function calculateStampDuty(totalAmount) {
+            // Every > 1000 unit count 1
+            // In count, let say 1000 -> 1, 1001 -> 2
+            var count = parseInt((totalAmount - 1) / 1000) + 1;
+            return count * 1.5;
+        }
+
+        function calculateTotalTransactionFees(totalAmount) {
+            return calculateBrokerFees(totalAmount) + calculateClearingFee(totalAmount) + calculateStampDuty(totalAmount);
+        }
+
+        /*
+        Gets total amount from the input form
+        */
+        function getTotalAmount() {
+            // Get the stock price and quantity from the form
+            var stockPrice = Number($("#stock-price").val());
+            var quantity = Number($("#quantity").val()) * 100;
+
+            return stockPrice * quantity;
+        }
+
+        /*
+        Sell total minus the transactional fees
+        */
+        function calculateSellTotalWithTransactionFees(amount) {
+            return amount - calculateTotalTransactionFees(amount);
+        }
+
+        function generateEarningTableCell(sellStockPrice) {
+            var quantity = Number($("#quantity").val()) * 100;
+
+            var totalAmount = getTotalAmount();
+            var totalAmountWithTransactionFees = totalAmount + calculateTotalTransactionFees(totalAmount);
+
+            var sellTotalAmount = sellStockPrice * quantity;
+            var sellTotalAmountWithTransactionFees = calculateSellTotalWithTransactionFees(sellTotalAmount);
+
+            var earnAmount = sellTotalAmountWithTransactionFees.toFixed(2) - totalAmountWithTransactionFees.toFixed(2);
+
+            return $("<tr>").append(
+                $("<td>").text(sellStockPrice),
+                $("<td>").text(sellTotalAmount.toFixed(2)),
+                $("<td>").text(calculateTotalTransactionFees(sellTotalAmount).toFixed(2)),
+                $("<td>").text(sellTotalAmountWithTransactionFees.toFixed(2)),
+                $("<td>").text(earnAmount.toFixed(2)),
+            );
+        }
+
+        function resetTable() {
+            $("#stock-price").val("");
+            $("#quantity").val("");
+            $("#table-rows").val("100");
+
+            $("#broker-fees").text("-");
+            $("#clearing-fees").text("-");
+            $("#stamp-duty").text("-");
+            $("#total-transaction-fees").text("-");
+
+            $("#total-buying-amount").text("");
+
+            $("#earning-table tbody").empty();
+            $("#load-more").remove();
+        }
+
+    </script>
+</body>
+
+</html>
