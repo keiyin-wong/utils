@@ -173,7 +173,7 @@
                     var totalTransactionFees = calculateTotalTransactionFees(totalAmount);
                     var totalBuyingAmount = totalAmount + totalTransactionFees;
 
-                    $("#max-quantity").html(`${maxLots} * 100 units. The total buy amount is RM${totalAmount} + RM${totalTransactionFees} = RM${totalBuyingAmount.toFixed(2)}`);
+                    $("#max-quantity").html(`${maxLots} * 100 units. The total cost of purchases is RM${totalAmount} + RM${totalTransactionFees} = RM${totalBuyingAmount.toFixed(2)}`);
 
                     $("#broker-fees").text("RM " + calculateBrokerFees(totalAmount).toFixed(2));
                     $("#clearing-fees").text("RM " + calculateClearingFee(totalAmount).toFixed(2));
